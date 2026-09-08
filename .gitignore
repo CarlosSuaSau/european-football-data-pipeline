@@ -1,9 +1,6 @@
 # Environment variables / secrets
 .env
 
-# Queries
-queries.sql
-
 # Python
 __pycache__/
 *.py[cod]

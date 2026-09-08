@@ -1,4 +1,4 @@
-# Environment variables / secrets
+# Environment variables
 .env
 
 # Python
@@ -13,6 +13,12 @@ env/
 # PyCharm
 .idea/
 
-# OS files
+# dbt generated files
+dbt_football/target/
+dbt_football/logs/
+dbt_football/dbt_packages/
+/logs
+
+# OS
 .DS_Store
 Thumbs.db

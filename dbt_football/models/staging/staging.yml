@@ -1,0 +1,126 @@
+version: 2
+
+models:
+
+  - name: stg_competitions
+    columns:
+
+      - name: competition_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: competition_code
+        data_tests:
+          - not_null
+          - unique
+
+
+  - name: stg_seasons
+    columns:
+
+      - name: season_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: competition_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_competitions')
+                field: competition_id
+
+
+  - name: stg_teams
+    columns:
+
+      - name: team_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: team_name
+        data_tests:
+          - not_null
+
+
+  - name: stg_season_teams
+    columns:
+
+      - name: season_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_seasons')
+                field: season_id
+
+      - name: team_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_teams')
+                field: team_id
+
+
+  - name: stg_matches
+    columns:
+
+      - name: match_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: season_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_seasons')
+                field: season_id
+
+      - name: home_team_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_teams')
+                field: team_id
+
+      - name: away_team_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_teams')
+                field: team_id
+
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - SCHEDULED
+                  - TIMED
+                  - IN_PLAY
+                  - PAUSED
+                  - EXTRA_TIME
+                  - PENALTY_SHOOTOUT
+                  - FINISHED
+                  - SUSPENDED
+                  - POSTPONED
+                  - CANCELLED
+                  - AWARDED
+
+      - name: winner
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - HOME_TEAM
+                  - AWAY_TEAM
+                  - DRAW

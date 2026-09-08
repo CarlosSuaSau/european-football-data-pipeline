@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: football_v1
+    schema: public
+
+    tables:
+      - name: competitions
+      - name: seasons
+      - name: teams
+      - name: season_teams
+      - name: matches

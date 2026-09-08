@@ -1,0 +1,16 @@
+name: 'dbt_football'
+version: '1.0.0'
+config-version: 2
+
+profile: 'dbt_football'
+
+model-paths: ["models"]
+
+models:
+  dbt_football:
+
+    staging:
+      +materialized: view
+
+    marts:
+      +materialized: table

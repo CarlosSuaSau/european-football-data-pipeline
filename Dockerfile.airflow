@@ -1,0 +1,20 @@
+FROM apache/airflow:3.3.1-python3.13
+
+COPY requirements.txt /tmp/requirements.txt
+
+RUN pip install --no-cache-dir \
+    "apache-airflow==${AIRFLOW_VERSION}" \
+    -r /tmp/requirements.txt
+
+COPY --chown=airflow:root api.py /opt/airflow/project/api.py
+COPY --chown=airflow:root transform.py /opt/airflow/project/transform.py
+COPY --chown=airflow:root database.py /opt/airflow/project/database.py
+COPY --chown=airflow:root main.py /opt/airflow/project/main.py
+COPY --chown=airflow:root schema.sql /opt/airflow/project/schema.sql
+
+COPY --chown=airflow:root dbt_football /opt/airflow/project/dbt_football
+
+ENV PYTHONPATH=/opt/airflow/project
+ENV DBT_PROFILES_DIR=/opt/airflow/project/dbt_football
+
+WORKDIR /opt/airflow/project

@@ -73,18 +73,27 @@ def main():
     logger.info("Initializing database...")
     initialize_database()
 
+    failed_competitions = []
+
     for name, code in COMPETITIONS.items():
         try:
             process_competition(name, code)
 
-        except Exception as exc:
-            logger.error(
-                "Could not process %s: %s",
+        except Exception:
+            logger.exception(
+                "Could not process %s",
                 name,
-                exc,
             )
 
-    logger.info("Pipeline finished.")
+            failed_competitions.append(name)
+
+    if failed_competitions:
+        raise RuntimeError(
+            "Pipeline failed for: "
+            + ", ".join(failed_competitions)
+        )
+
+    logger.info("Pipeline finished successfully.")
 
 
 if __name__ == "__main__":

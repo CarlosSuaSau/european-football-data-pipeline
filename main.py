@@ -1,13 +1,16 @@
 import logging
+import time
 
 from api import (
     COMPETITIONS,
     get_competition,
     get_teams,
     get_matches,
+    get_match,
 )
 
 from transform import (
+    InvalidMatchStatusError,
     transform_competition,
     transform_season,
     transform_teams,
@@ -27,6 +30,74 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+STATUS_REFRESH_RETRIES = 2
+STATUS_REFRESH_DELAY = 2
+
+
+def transform_matches_with_refresh(raw_matches):
+    """
+    Transform matches and retry individual matches when the API
+    temporarily returns an invalid match status.
+
+    Matches that remain invalid after all refresh attempts are skipped
+    instead of preventing the rest of the competition from being loaded.
+    """
+
+    if (
+        "matches" not in raw_matches
+        or not isinstance(raw_matches["matches"], list)
+    ):
+        raise ValueError("Unexpected matches response.")
+
+    transformed_matches = []
+    skipped_matches = []
+
+    for raw_match in raw_matches["matches"]:
+        current_match = raw_match
+
+        for attempt in range(STATUS_REFRESH_RETRIES + 1):
+            try:
+                transformed = transform_matches(
+                    {"matches": [current_match]}
+                )
+
+                transformed_matches.extend(transformed)
+                break
+
+            except InvalidMatchStatusError as exc:
+                if attempt == STATUS_REFRESH_RETRIES:
+                    logger.warning(
+                        "Skipping match %s because status %r "
+                        "is still invalid after %d refresh attempts.",
+                        exc.match_id,
+                        exc.status,
+                        STATUS_REFRESH_RETRIES,
+                    )
+
+                    skipped_matches.append(exc.match_id)
+                    break
+
+                logger.warning(
+                    "Match %s returned invalid status %r. "
+                    "Refreshing it from the API "
+                    "(attempt %d/%d)...",
+                    exc.match_id,
+                    exc.status,
+                    attempt + 1,
+                    STATUS_REFRESH_RETRIES,
+                )
+
+                time.sleep(STATUS_REFRESH_DELAY)
+
+                current_match = get_match(exc.match_id)
+
+    if raw_matches["matches"] and not transformed_matches:
+        raise RuntimeError(
+            "No valid matches could be transformed."
+        )
+
+    return transformed_matches, skipped_matches
 
 
 def process_competition(name, code):
@@ -50,7 +121,9 @@ def process_competition(name, code):
         season["id"],
     )
 
-    matches = transform_matches(raw_matches)
+    matches, skipped_matches = transform_matches_with_refresh(
+        raw_matches
+    )
 
     # 3. Load
     save_competition_data(
@@ -62,11 +135,20 @@ def process_competition(name, code):
     )
 
     logger.info(
-        "%s completed: %d teams, %d matches.",
+        "%s completed: %d teams, %d valid matches loaded, "
+        "%d matches skipped.",
         name,
         len(teams),
         len(matches),
+        len(skipped_matches),
     )
+
+    if skipped_matches:
+        logger.warning(
+            "%s skipped match IDs: %s",
+            name,
+            ", ".join(str(match_id) for match_id in skipped_matches),
+        )
 
 
 def main():

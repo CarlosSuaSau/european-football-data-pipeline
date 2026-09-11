@@ -24,3 +24,5 @@ dbt_football/dbt_packages/
 Thumbs.db
 
 logs/
+
+.env.azure.local

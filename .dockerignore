@@ -13,6 +13,7 @@ dbt_football/target/
 dbt_football/logs/
 dbt_football/dbt_packages/
 
+airflow/
 logs/
-
 powerbi/
+docs/

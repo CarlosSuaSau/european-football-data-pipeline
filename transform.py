@@ -1,5 +1,31 @@
 from datetime import date, datetime
 
+ALLOWED_MATCH_STATUSES = {
+    "SCHEDULED",
+    "TIMED",
+    "IN_PLAY",
+    "PAUSED",
+    "EXTRA_TIME",
+    "PENALTY_SHOOTOUT",
+    "FINISHED",
+    "SUSPENDED",
+    "POSTPONED",
+    "CANCELLED",
+    "AWARDED",
+}
+
+class InvalidMatchStatusError(ValueError):
+    """Raised when football-data.org returns an invalid match status."""
+
+    def __init__(self, match_id, status):
+        self.match_id = match_id
+        self.status = status
+
+        super().__init__(
+            f"Unexpected match status {status!r} "
+            f"for match {match_id}."
+        )
+
 
 def parse_date(value):
     """Convert an API date string into a Python date."""
@@ -108,6 +134,14 @@ def transform_matches(data):
             score = match.get("score") or {}
             full_time = score.get("fullTime") or {}
 
+            status = match["status"]
+
+            if status not in ALLOWED_MATCH_STATUSES:
+                raise InvalidMatchStatusError(
+                    match_id=match["id"],
+                    status=status,
+                )
+
             transformed_match = {
                 "id": match["id"],
                 "season_id": match["season"]["id"],
@@ -115,7 +149,7 @@ def transform_matches(data):
                 "matchday": match.get("matchday"),
                 "home_team_id": match["homeTeam"]["id"],
                 "away_team_id": match["awayTeam"]["id"],
-                "status": match["status"],
+                "status": status,
                 "home_goals": full_time.get("home"),
                 "away_goals": full_time.get("away"),
                 "winner": score.get("winner"),

@@ -19,6 +19,7 @@ def get_connection():
             dbname=os.getenv("DB_NAME"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
+            sslmode=os.getenv("DB_SSLMODE", "prefer"),
         )
 
     except psycopg2.Error as exc:

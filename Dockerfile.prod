@@ -1,0 +1,18 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY api.py .
+COPY transform.py .
+COPY database.py .
+COPY main.py .
+COPY run_pipeline.py .
+COPY schema.sql .
+
+COPY dbt_football ./dbt_football
+
+CMD ["python", "run_pipeline.py"]

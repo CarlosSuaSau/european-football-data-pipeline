@@ -115,3 +115,7 @@ def get_teams(competition_code):
 def get_matches(competition_code):
     """Get matches from the current season."""
     return make_request(f"/competitions/{competition_code}/matches")
+
+def get_match(match_id):
+    """Get a single match by its ID."""
+    return make_request(f"/matches/{match_id}")

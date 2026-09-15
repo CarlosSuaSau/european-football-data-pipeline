@@ -108,8 +108,6 @@ models:
                   - TIMED
                   - IN_PLAY
                   - PAUSED
-                  - EXTRA_TIME
-                  - PENALTY_SHOOTOUT
                   - FINISHED
                   - SUSPENDED
                   - POSTPONED
